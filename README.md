@@ -13,7 +13,7 @@ The assignment contains implementation of basics of Java, DBMS and hosting a For
 - **Servlet API jar**
 - **MySQL Connector jar** (Must be the same version as MySQL Workbench)
 
-## Folder Structure
+## 
 
 ### 1. [Core Java](https://github.com/Rohan-Redd/ISS_Assignments/tree/main/Java)
 
@@ -26,7 +26,7 @@ The assignment contains implementation of basics of Java, DBMS and hosting a For
 
 ### 3. [Client-Side Programming](https://github.com/Rohan-Redd/ISS_Assignments/tree/main/Basic_Webpage)
 
-### 4. [Integrating Client and Server Side](link_to_client_side_folder)
+### 4. Integrating Client and Server Side
 
    - #### 4.1 [Basic Hello World Webpage Hosted in Tomcat Server](https://github.com/Rohan-Redd/ISS_Assignments/tree/main/Basic_HelloWorld)
 
