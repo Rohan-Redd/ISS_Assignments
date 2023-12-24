@@ -1,0 +1,141 @@
+-- Contains all the commands to be executed in SQL environment
+
+-- Create a new database
+CREATE DATABASE UniversityDB;
+USE UniversityDB;
+
+-- Create Students table
+CREATE TABLE Students (
+    StudentID INT PRIMARY KEY,
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL,
+    BirthDate DATE,
+    CONSTRAINT CHK_StudentBirthDate CHECK (BirthDate <= GETDATE())
+);
+
+-- Create Courses table
+CREATE TABLE Courses (
+    CourseID INT PRIMARY KEY,
+    CourseName NVARCHAR(100) NOT NULL,
+    Credits INT CHECK (Credits > 0)
+);
+
+-- Create Instructors table
+CREATE TABLE Instructors (
+    InstructorID INT PRIMARY KEY,
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL
+);
+
+-- Create Enrollments table
+CREATE TABLE Enrollments (
+    EnrollmentID INT PRIMARY KEY,
+    StudentID INT FOREIGN KEY REFERENCES Students(StudentID),
+    CourseID INT FOREIGN KEY REFERENCES Courses(CourseID),
+    Marks INT CHECK (Marks >= 0 AND Marks <= 100),
+    CONSTRAINT CHK_UniqueEnrollment UNIQUE (StudentID, CourseID)
+);
+
+-- Insert data into Students table
+INSERT INTO Students (StudentID, FirstName, LastName, BirthDate) VALUES
+(1, 'Rohan', 'Reddy', '2000-01-15'),
+(2, 'Monish', 'Gopi', '1999-05-22'),
+(3, 'Lallith', 'Prasath', '2001-03-10');
+
+-- Insert data into Courses table
+INSERT INTO Courses (CourseID, CourseName, Credits) VALUES
+(1, 'Database Management', 3),
+(2, 'Programming Fundamentals', 4),
+(3, 'Web Development', 3);
+
+-- Insert data into Instructors table
+INSERT INTO Instructors (InstructorID, FirstName, LastName) VALUES
+(1, 'Professor', 'Satish'),
+(2, 'Dr.', 'Meena'),
+(3, 'Dr.', 'Arun');
+
+-- Insert data into Enrollments table
+INSERT INTO Enrollments (EnrollmentID, StudentID, CourseID, Marks) VALUES
+(1, 1, 1, 85),
+(2, 2, 2, 92),
+(3, 3, 3, 78),
+(4, 1, 2, 88);
+
+-- Select students and their enrolled courses
+SELECT S.FirstName, S.LastName, C.CourseName
+FROM Students S
+JOIN Enrollments E ON S.StudentID = E.StudentID
+JOIN Courses C ON E.CourseID = C.CourseID
+ORDER BY S.LastName, S.FirstName;
+
+-- Update a student's birth date
+UPDATE Students SET BirthDate = '2000-01-20' WHERE StudentID = 1;
+
+-- Delete an enrollment record
+DELETE FROM Enrollments WHERE EnrollmentID = 4;
+
+-- Select top 2 students with the highest Markss
+SELECT TOP 2 S.FirstName, S.LastName, MAX(E.Marks) AS MaxMarks
+FROM Students S
+JOIN Enrollments E ON S.StudentID = E.StudentID
+GROUP BY S.FirstName, S.LastName
+ORDER BY MaxMarks DESC;
+
+-- Select students with last names starting with 'G' or in the 'Web Development' course
+SELECT FirstName, LastName
+FROM Students
+WHERE LastName LIKE 'G%' OR StudentID IN (SELECT StudentID FROM Enrollments WHERE CourseID = 3);
+
+-- Select courses with credits between 3 and 4
+SELECT CourseName, Credits FROM Courses WHERE Credits BETWEEN 3 AND 4;
+
+-- Aliases and Joins to find instructors for each course
+SELECT C.CourseName, I.FirstName + ' ' + I.LastName AS InstructorName
+FROM Courses C
+JOIN Instructors I ON C.CourseID = I.InstructorID;
+
+-- Union usage to combine two sets of courses
+SELECT CourseName FROM Courses WHERE Credits = 3
+UNION
+SELECT CourseName FROM Courses WHERE Credits = 4;
+
+-- Select into a new table to store high-achieving students
+SELECT S.StudentID, S.FirstName, S.LastName, E.Marks
+INTO HighAchievers
+FROM Students S
+JOIN Enrollments E ON S.StudentID = E.StudentID
+WHERE E.Marks >= 90;
+
+-- Create a view to display student details and course Markss
+CREATE VIEW StudentCourseDetails AS
+SELECT S.FirstName, S.LastName, C.CourseName, E.Marks
+FROM Students S
+JOIN Enrollments E ON S.StudentID = E.StudentID
+JOIN Courses C ON E.CourseID = C.CourseID;
+
+SELECT * FROM StudentCourseDetails;
+
+-- Group by and Having are being used to find courses with average Marks above 80
+SELECT C.CourseName, AVG(E.Marks) AS AverageMarks
+FROM Courses C
+JOIN Enrollments E ON C.CourseID = E.CourseID
+GROUP BY C.CourseName
+HAVING AVG(E.Marks) > 80;
+
+-- Callable statement (Stored Procedure for updating a student's Marks)
+CREATE PROCEDURE UpdateStudentMarks
+    @StudentID INT,
+    @CourseID INT,
+    @NewMarks INT
+AS
+BEGIN
+    UPDATE Enrollments
+    SET Marks = @NewMarks
+    WHERE StudentID = @StudentID AND CourseID = @CourseID;
+END;
+
+-- Execute the stored procedure to update a student's Marks
+EXEC UpdateStudentMarks @StudentID = 1, @CourseID = 1, @NewMarks = 95;
+
+-- Verify the updated data
+SELECT * FROM StudentCourseDetails;
